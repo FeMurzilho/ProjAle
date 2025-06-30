@@ -1,57 +1,40 @@
 const express = require('express');
 const { Pool } = require('pg');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-// Configuração da conexão com o PostgreSQL
+// Banco de dados
 const pool = new Pool({
   user: 'postgres',
-  host: 'db', // Nome do serviço no docker-compose.yml
+  host: 'db',
   database: 'postgres',
   password: 'docker',
   port: 5432,
 });
 
-// Rota GET /alunos
-app.get('/alunos', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM aluno');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Erro no servidor');
-  }
-});
+// Rotas
+const alunoRouter = require('./routes/aluno')(pool);
+const professorRouter = require('./routes/professores')(pool);
+const turmaRouter = require('./routes/turmas')(pool);
+const presencaRouter = require('./routes/presenca')(pool);
+const atividadeRouter = require('./routes/atividades')(pool);
+const atividadeAlunoRouter = require('./routes/atividadesalunos')(pool);
+const pagamentoRouter = require('./routes/pagamento')(pool);
+const usuarioRouter = require('./routes/usuario')(pool);
 
-// Rota POST /alunos
-app.post('/alunos', async (req, res) => {
-  const { nome, idade } = req.body;
-  try {
-    await pool.query('INSERT INTO aluno (nome, idade) VALUES ($1, $2)', [nome, idade]);
-    res.status(201).send('Aluno criado!');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Erro ao criar aluno');
-  }
-});
+app.use('/aluno', alunoRouter);
+app.use('/professor', professorRouter);
+app.use('/turma', turmaRouter);
+app.use('/presenca', presencaRouter);
+app.use('/atividade', atividadeRouter);
+app.use('/atividade-aluno', atividadeAlunoRouter);
+app.use('/pagamento', pagamentoRouter);
+app.use('/usuario', usuarioRouter);
 
-// Rota PUT /alunos/:id
-app.put('/alunos/:id', async (req, res) => {
-  const { id } = req.params;
-  const { nome, idade } = req.body;
-
-  try {
-    await pool.query('UPDATE aluno SET nome = $1, idade = $2 WHERE id = $3', [nome, idade, id]);
-    res.status(200).send('Aluno atualizado com sucesso!');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Erro ao atualizar aluno');
-  }
-});
-
-// Inicialização do servidor
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`API rodando na porta ${PORT}`);
+// Servidor
+app.listen(3000, () => {
+  console.log('Servidor rodando na porta 3000');
 });

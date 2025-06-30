@@ -1,18 +1,6 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: ./backend
-    ports:
-      - '3000:3000'
-    depends_on:
-      - db
-    volumes:
-      - ./backend:/app
-    networks:
-      - app-network
-
   db:
     image: postgres:16
     restart: always
@@ -21,10 +9,13 @@ services:
       POSTGRES_PASSWORD: docker
       POSTGRES_DB: postgres
     ports:
-      - '5432:5432'
-    networks:
-      - app-network
+      - "5432:5432"
 
-networks:
-  app-network:
-    driver: bridge
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
